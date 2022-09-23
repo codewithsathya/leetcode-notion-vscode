@@ -1,6 +1,10 @@
+// Copyright (c) codewithsathya. All rights reserved.
+// Licensed under the MIT license.
+
 import axios from 'axios'
 
 async function updatePage(secret, pageId) {
+  let date = new Date(Date.now()).toISOString().split("T")[0];
   const options = {
     method: "PATCH",
     url: "https://api.notion.com/v1/pages/" + pageId,
@@ -18,6 +22,11 @@ async function updatePage(secret, pageId) {
             name: "Done",
           },
         },
+        "Last Submitted": {
+          date: {
+            start: date
+          }
+        }
       },
     },
   };
@@ -25,22 +34,17 @@ async function updatePage(secret, pageId) {
   return data;
 }
 
-async function getPageId(secret, query) {
+async function getPageId(email: string, questionId: string) {
   const options = {
     method: "POST",
-    url: "https://api.notion.com/v1/search",
+    url: "https://leetnotion.codewithsathya.com/getPageId",
     headers: {
       Accept: "application/json",
-      "Notion-Version": "2022-06-28",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${secret}`
+      "Content-Type": "application/json"
     },
     data: {
-      query,
-      sort: {
-        direction: "ascending",
-        timestamp: "last_edited_time",
-      },
+      email,
+      questionId 
     },
   };
   const { data } = await axios.request(options);
@@ -75,19 +79,18 @@ async function appendBlock(secret, pageId, content) {
 }
 
 
-export async function updateNotionTasks(secret, code){
-  let question = getName(code);
+export async function updateNotionTasks(notionEmail, secret, code){
+  let questionId = getId(code);
   let filteredCode = getCode(code);
-  let pageId = await getPageId(secret, question);
-  if(pageId.results.length === 0) return;
-  await updatePage(secret, pageId.results[0].id);
-  await appendBlock(secret, pageId.results[0].id, filteredCode);
+  let pageId = await getPageId(notionEmail, questionId);
+  await updatePage(secret, pageId);
+  await appendBlock(secret, pageId, filteredCode);
 }
 
-function getName(code){
-  let str = code.substring(code.indexOf("/*\n") + 3, code.indexOf("*/")).split("\n")[2];
-  let name = str.substring(str.indexOf("]") + 2);
-  return name;
+function getId(code){
+  let str = code.substring(code.indexOf("@lc") + 3, code.indexOf(" lang"));
+  let id = str.substring(str.indexOf("id=") + 3, code.indexOf(" lang"));
+  return id;
 }
 
 function getCode(code){

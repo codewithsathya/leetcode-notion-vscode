@@ -143,10 +143,17 @@ class LeetCodeManager extends EventEmitter {
                     ignoreFocusOut: true
                   });
 
-                if(notionSecret === ''){
+                const leetnotionEmail = await vscode.window.showInputBox({
+                    placeHolder: "",
+                    prompt: "Enter your leetnotion email",
+                    ignoreFocusOut: true
+                })
+
+                if(notionSecret === '' || leetnotionEmail === ""){
                   vscode.window.showErrorMessage('Notion integration disabled');
                 }else{
                     context.globalState.update("notionSecret", notionSecret);
+                    context.globalState.update("leetnotionEmail", leetnotionEmail);
                 }
 
             });
